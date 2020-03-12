@@ -5,6 +5,7 @@ from data.jobs import Jobs
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_user, current_user, logout_user, \
     login_required
+from flask_restful import Resource, Api, reqparse
 from flask_wtf import FlaskForm
 from werkzeug.exceptions import abort
 from werkzeug.utils import redirect
@@ -14,10 +15,8 @@ from wtforms.validators import DataRequired
 from flask import make_response
 from data import db_session
 from data.users import User
-
-from users_resources import api
-
-import users_resources
+from resources import users_resources
+from resources import jobs_resources
 
 app = Flask(__name__)
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(days=365)
@@ -26,6 +25,8 @@ app.config['SECRET_KEY'] = 'my_secret'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
+api = Api(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -147,8 +148,9 @@ def edit_job(id):
     if request.method == "GET":
         connect = db_session.create_session()
         job = connect.query(Jobs).filter(Jobs.id == id, (
-                (Jobs.team_leader == current_user.id) | (current_user.id == 1) | (
-                current_user.id == Jobs.creater_id))).first()
+                (Jobs.team_leader == current_user.id) | (
+                    current_user.id == 1) | (
+                        current_user.id == Jobs.creater_id))).first()
         if job:
             form.team_leader.data = job.team_leader
             form.job.data = job.job
@@ -160,8 +162,9 @@ def edit_job(id):
     if form.validate_on_submit():
         connect = db_session.create_session()
         job = connect.query(Jobs).filter(Jobs.id == id, (
-                (Jobs.team_leader == current_user.id) | (current_user.id == 1) | (
-                current_user.id == Jobs.creater_id))).first()
+                (Jobs.team_leader == current_user.id) | (
+                    current_user.id == 1) | (
+                        current_user.id == Jobs.creater_id))).first()
         if job:
             job.team_leader = form.team_leader.data
             job.job = form.job.data
@@ -180,8 +183,10 @@ def edit_job(id):
 @login_required
 def job_delete(id):
     connect = db_session.create_session()
-    jobs = connect.query(Jobs).filter(Jobs.id == id, ((Jobs.team_leader == current_user.id) | (current_user.id == 1) | (
-            current_user.id == Jobs.creater_id))).first()
+    jobs = connect.query(Jobs).filter(Jobs.id == id, (
+                (Jobs.team_leader == current_user.id) | (
+                    current_user.id == 1) | (
+                        current_user.id == Jobs.creater_id))).first()
     if jobs:
         connect.delete(jobs)
         connect.commit()
@@ -205,11 +210,14 @@ def login():
     return render_template('login.html', title='Авторизация', form=form)
 
 
+
+
 if __name__ == "__main__":
     db_session.global_init('db/main_data_base.db')
-    # для списка объектов
-    api.add_resource(users_resources.UsersListResource, '/api/v2/users', endpoint='users')
-    # для одного объекта
-    api.add_resource(users_resources.UsersResource, '/api/v2/users/<int:user_id>')
-    api.init_app(app)
-    app.run()
+
+    api.add_resource(users_resources.UsersListResource, '/api/v2/users')
+    api.add_resource(users_resources.UsersResource,
+                     '/api/v2/users/<int:user_id>')
+    api.add_resource(jobs_resources.JobsResource, '/api/v2/jobs/<int:job_id>')
+    api.add_resource(jobs_resources.JobsListResource, '/api/v2/jobs')
+    app.run(debug=True)
