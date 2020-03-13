@@ -31,7 +31,7 @@ class UsersResource(Resource):
         user = session.query(User).get(user_id)
         session.delete(user)
         session.commit()
-        return jsonify({'success': 'OK'})
+        return jsonify({'success': 'OK - user deleted'})
 
 
 class UsersListResource(Resource):

@@ -25,8 +25,8 @@ app.config['SECRET_KEY'] = 'my_secret'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-
 api = Api(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -149,7 +149,7 @@ def edit_job(id):
         connect = db_session.create_session()
         job = connect.query(Jobs).filter(Jobs.id == id, (
                 (Jobs.team_leader == current_user.id) | (
-                    current_user.id == 1) | (
+                current_user.id == 1) | (
                         current_user.id == Jobs.creater_id))).first()
         if job:
             form.team_leader.data = job.team_leader
@@ -163,7 +163,7 @@ def edit_job(id):
         connect = db_session.create_session()
         job = connect.query(Jobs).filter(Jobs.id == id, (
                 (Jobs.team_leader == current_user.id) | (
-                    current_user.id == 1) | (
+                current_user.id == 1) | (
                         current_user.id == Jobs.creater_id))).first()
         if job:
             job.team_leader = form.team_leader.data
@@ -184,9 +184,9 @@ def edit_job(id):
 def job_delete(id):
     connect = db_session.create_session()
     jobs = connect.query(Jobs).filter(Jobs.id == id, (
-                (Jobs.team_leader == current_user.id) | (
-                    current_user.id == 1) | (
-                        current_user.id == Jobs.creater_id))).first()
+            (Jobs.team_leader == current_user.id) | (
+            current_user.id == 1) | (
+                    current_user.id == Jobs.creater_id))).first()
     if jobs:
         connect.delete(jobs)
         connect.commit()
@@ -210,14 +210,11 @@ def login():
     return render_template('login.html', title='Авторизация', form=form)
 
 
-
-
 if __name__ == "__main__":
     db_session.global_init('db/main_data_base.db')
-
     api.add_resource(users_resources.UsersListResource, '/api/v2/users')
     api.add_resource(users_resources.UsersResource,
                      '/api/v2/users/<int:user_id>')
     api.add_resource(jobs_resources.JobsResource, '/api/v2/jobs/<int:job_id>')
     api.add_resource(jobs_resources.JobsListResource, '/api/v2/jobs')
-    app.run(debug=True)
+    app.run()
